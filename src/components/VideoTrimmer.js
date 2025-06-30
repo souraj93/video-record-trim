@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { trimVideo, mergeMedia } from './ffmpegUtils';
 
-const VideoTrimmer = ({ videoBlob }) => {
+const VideoTrimmer = ({ videoBlob, trimVideoState, displayMusic, clickMusic, clickTrim, displayTrim, mergeVideoState }) => {
   const [start, setStart] = useState(0);
   const videoRef = useRef(null);
   const [videoDuration, setVideoDuration] = useState(0);
@@ -10,15 +10,18 @@ const VideoTrimmer = ({ videoBlob }) => {
   const [thumbnail, setThumbnail] = useState("");
   const [audioFile, setAudioFile] = useState(null);
   const [trimmedVideo, setTrimmedVideo] = useState(null);
+  const [mergedVideo, setMergedVideo] = useState(null);
   const [outputMergedURL, setOutputMergedURL] = useState(null);
 
 
   const handleTrim = async () => {
-    const resultURL = await trimVideo(videoBlob, start, duration);
+    const resultURL = await trimVideo(mergedVideo || videoBlob, start, duration);
     captureThumbnail(resultURL.blob);
-    console.log("resultURL ", resultURL)
     setTrimmedVideo(resultURL.blob);
+    trimVideoState(true);
     setOutputURL(resultURL.url);
+    setOutputMergedURL("");
+    clickMusic(false);
   };
 
   const captureThumbnail = (blob) => {
@@ -38,43 +41,63 @@ const VideoTrimmer = ({ videoBlob }) => {
   };
 
   const merge = async () => {
-    const resultURL = await mergeMedia(trimmedVideo, audioFile);
+    const resultURL = await mergeMedia(trimmedVideo || videoBlob, audioFile);
+    setOutputURL("");
+    clickTrim(false);
+    setMergedVideo(resultURL.blob);
     setOutputMergedURL(resultURL.url);
+    mergeVideoState(true);
   };
 
   return (
     <div style={{ marginTop: 20 }}>
-      <label>Start time (s):</label>
-      <input type="number" value={start} onChange={(e) => setStart(Number(e.target.value))} />
-      <label>Duration (s):</label>
-      <input type="number" value={duration} onChange={(e) => setDuration(Number(e.target.value))} />
-      <br />
-      <button onClick={handleTrim} style={{ marginTop: 10 }}>✂️ Trim Video</button>
-
-      {outputURL && (
-        <div>
+      {displayTrim ?
+      outputURL && !outputMergedURL ? (
+        <div className='relative'>
           <h4>Trimmed Video</h4>
           <video src={outputURL} controls width="400" ref={videoRef} onLoadedMetadata={() => {
             const duration = videoRef.current.duration;
             setVideoDuration(duration);
           }} />
-          <a href={outputURL} download="trimmed.mp4">📥 Download</a>
+          {!displayMusic ? <div className='absolute right-0 py-2 top-0'>
+            <button className="bg-primary rounded-full p-2" onClick={() => clickMusic(true)}>🎬</button>
+          </div>
+       : null}
+          {/* <a href={outputURL} download="trimmed.mp4">📥 Download</a> */}
         </div>
-      )}
-      <p>Video Duration: {videoDuration} seconds</p>
+      ) : 
+      <>
+        <label>Start time (s):</label>
+        <input type="number" value={start} onChange={(e) => setStart(Number(e.target.value))} />
+        <label>Duration (s):</label>
+        <input type="number" value={duration} onChange={(e) => setDuration(Number(e.target.value))} />
+        <br />
+        <button onClick={handleTrim} style={{ marginTop: 10 }}>✂️ Trim Video</button>
 
+      </> : null
+      }
+      {/* <p>Video Duration: {videoDuration} seconds</p> */}
+
+      {displayMusic ?
+      <>
       {/* {thumbnail && <img src={thumbnail} alt="Thumbnail" />} */}
-      <input type="file" accept="audio/*" onChange={(e) => setAudioFile(e.target.files[0])} />
-
-      <button onClick={merge} style={{ marginTop: 10 }}>✂️ Merge Media</button>
-
-      {outputMergedURL && (
-        <div>
+      
+      {outputMergedURL && !outputURL ? (
+        <div className='relative'>
           <h4>Merged Video</h4>
           <video src={outputMergedURL} controls width="400" />
-          <a href={outputMergedURL} download="merged.mp4">📥 Download</a>
+          {!displayTrim ? <div className='absolute right-0 py-2 top-0'>
+            <button className="bg-primary rounded-full p-2" onClick={() => clickTrim(true)}>✂️</button>
+          </div>
+       : null}
+          {/* <a href={outputMergedURL} download="merged.mp4">📥 Download</a> */}
         </div>
-      )}
+      ) : <>
+        <input type="file" accept="audio/*" onChange={(e) => setAudioFile(e.target.files[0])} />
+
+      <button onClick={merge} style={{ marginTop: 10 }}>✂️ Merge Media</button>
+      </>}
+      </> : null}
 
     </div>
   );
