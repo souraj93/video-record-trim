@@ -11,8 +11,7 @@ export default function Home() {
   const [displayMusic, clickMusic] = useState(false);
 
   return (
-    <div style={{ padding: 20 }}>
-      <h1>🎥 Record & ✂️ Trim Video</h1>
+    <div>
       {!videoTrimmed && !videoMerged ?
       <WebcamRecorder 
       onRecorded={setRecordedBlob} 

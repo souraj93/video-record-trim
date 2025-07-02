@@ -41,6 +41,10 @@ const VideoTrimmer = ({ videoBlob, trimVideoState, displayMusic, clickMusic, cli
   };
 
   const merge = async () => {
+    if(!audioFile) {
+      alert("Please select an audio file to merge with the video.");
+      return;
+    }
     const resultURL = await mergeMedia(trimmedVideo || videoBlob, audioFile);
     setOutputURL("");
     clickTrim(false);
@@ -50,12 +54,12 @@ const VideoTrimmer = ({ videoBlob, trimVideoState, displayMusic, clickMusic, cli
   };
 
   return (
-    <div style={{ marginTop: 20 }}>
+    <div className='px-4 text-black'>
       {displayTrim ?
       outputURL && !outputMergedURL ? (
         <div className='relative'>
           <h4>Trimmed Video</h4>
-          <video src={outputURL} controls width="400" ref={videoRef} onLoadedMetadata={() => {
+          <video src={outputURL} controls width="400" className='h-screen object-cover' ref={videoRef} onLoadedMetadata={() => {
             const duration = videoRef.current.duration;
             setVideoDuration(duration);
           }} />
@@ -68,11 +72,12 @@ const VideoTrimmer = ({ videoBlob, trimVideoState, displayMusic, clickMusic, cli
       ) : 
       <>
         <label>Start time (s):</label>
-        <input type="number" value={start} onChange={(e) => setStart(Number(e.target.value))} />
+        <input type="number" value={start} className='border p-1 bg-white' onChange={(e) => setStart(Number(e.target.value))} />
         <label>Duration (s):</label>
-        <input type="number" value={duration} onChange={(e) => setDuration(Number(e.target.value))} />
+        <input type="number" value={duration} className='border p-1 bg-white' onChange={(e) => setDuration(Number(e.target.value))} />
         <br />
-        <button onClick={handleTrim} style={{ marginTop: 10 }}>✂️ Trim Video</button>
+        <button onClick={handleTrim} className="bg-primary p-2 text-white rounded-lg" style={{ marginTop: 10 }}>✂️ Trim Video</button>
+        <button onClick={() => clickTrim(false)} className=" p-2 text-white rounded-lg ml-2" style={{ marginTop: 10, backgroundColor: "red" }}> Cancel</button>
 
       </> : null
       }
@@ -85,7 +90,7 @@ const VideoTrimmer = ({ videoBlob, trimVideoState, displayMusic, clickMusic, cli
       {outputMergedURL && !outputURL ? (
         <div className='relative'>
           <h4>Merged Video</h4>
-          <video src={outputMergedURL} controls width="400" />
+          <video src={outputMergedURL} controls width="400" className='h-screen object-cover' />
           {!displayTrim ? <div className='absolute right-0 py-2 top-0'>
             <button className="bg-primary rounded-full p-2" onClick={() => clickTrim(true)}>✂️</button>
           </div>
@@ -95,7 +100,8 @@ const VideoTrimmer = ({ videoBlob, trimVideoState, displayMusic, clickMusic, cli
       ) : <>
         <input type="file" accept="audio/*" onChange={(e) => setAudioFile(e.target.files[0])} />
 
-      <button onClick={merge} style={{ marginTop: 10 }}>✂️ Merge Media</button>
+      <button onClick={merge} className="bg-primary p-2 text-white rounded-lg" style={{ marginTop: 10 }}>✂️ Merge Media</button>
+      <button onClick={() => clickMusic(false)} className=" p-2 text-white rounded-lg ml-2" style={{ marginTop: 10, backgroundColor: "red" }}> Cancel</button>
       </>}
       </> : null}
 

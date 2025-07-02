@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Webcam from 'react-webcam';
 
 const WebcamRecorder = ({ onRecorded, clickTrim, displayTrim, displayMusic, clickMusic }) => {
@@ -6,6 +6,8 @@ const WebcamRecorder = ({ onRecorded, clickTrim, displayTrim, displayMusic, clic
   const mediaRecorderRef = useRef(null);
   const [recording, setRecording] = useState(false);
   const [videoURL, setVideoURL] = useState(null);
+  const [timer, setTimer] = useState(0);
+  let interval = null;
 
   const startRecording = () => {
     setRecording(true);
@@ -22,34 +24,70 @@ const WebcamRecorder = ({ onRecorded, clickTrim, displayTrim, displayMusic, clic
     };
 
     recorder.start();
+
+    setTimer(0);
+     // Stop recording after 60 seconds
+
     mediaRecorderRef.current = recorder;
   };
 
   const stopRecording = () => {
     mediaRecorderRef.current.stop();
+    clearInterval(interval);
     setRecording(false);
   };
+
+  useEffect(() => {
+    if (recording) {
+      interval = setInterval(() => {
+        setTimer((prev) => {
+          if (prev >= 60) {
+            clearInterval(interval);
+            return 60;
+          }
+          return prev + 1;
+        });
+      }, 1000);
+      setTimeout(() => {
+        if (recording) {
+          stopRecording();
+          clearInterval(interval);
+        }
+      }, 60000); // Stop recording after 60 seconds
+    }
+    return () => clearInterval(interval);
+  }, [recording]);
 
   return (
     <div className='relative'>
       {videoURL ? (
-        <video src={videoURL} controls width="400" style={{ marginTop: 20 }} />
-      ) : <Webcam audio={true} muted={true} ref={webcamRef} />}
-      <div className='absolute right-0 py-2 top-0'>
+        <video src={videoURL} controls width="400" style={{ marginTop: 20 }} className='h-screen object-cover' />
+      ) : <Webcam audio={true} muted={true} ref={webcamRef} className='h-screen object-cover' />}
+      {recording ? 
+      <div className='absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white p-2 flex justify-between items-center'>
+        <span>Timer: {timer}s</span>
+      </div> : null}
+      {videoURL ? 
+      <div className='absolute top-0 left-0 right-0 bg-black bg-opacity-50 text-white p-2 flex justify-between items-center'>
+        <span>Time: {timer}s</span>
+      </div> : null}
+      <div className='absolute py-2' style={{left: '45%', bottom: 10}}>
         {!videoURL ? !recording ? (
-          <button className="bg-primary rounded-full p-2" onClick={startRecording}>🛑</button>
+          <button className=" rounded-full p-2 w-12 h-12" style={{ backgroundColor: 'red' }} onClick={startRecording}></button>
         ) : (
-          <button className="bg-primary rounded-full p-2" onClick={stopRecording}>⏹️</button>
-        ) : <>
-        {!displayTrim && !displayMusic ? <button className="bg-primary rounded-full p-2" onClick={() => clickTrim(true)}>✂️</button>
-       : null}
-       {!displayMusic && !displayTrim ? <button className="bg-primary rounded-full p-2" onClick={() => clickMusic(true)}>🎬</button>
-       : null}
-        </>
+          <button className=" p-2 w-12 h-12" style={{ backgroundColor: 'red' }} onClick={stopRecording}></button>
+        ) : null}
+      </div>
+      <div className='absolute top-2 right-2 p-2'>
+        {videoURL ?
+          <>
+            {!displayTrim && !displayMusic ? <button className="bg-primary rounded-full p-2 mr-2" onClick={() => clickTrim(true)}>✂️</button>
+              : null}
+            {!displayMusic && !displayTrim ? <button className="bg-primary rounded-full p-2" onClick={() => clickMusic(true)}>🎬</button>
+              : null}
+          </> : null
         }
       </div>
-      
-      
     </div>
   );
 };
