@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Webcam from 'react-webcam';
 
-const WebcamRecorder = ({ onRecorded, clickTrim, displayTrim, displayMusic, clickMusic }) => {
+const WebcamRecorder = ({ onRecorded, clickTrim, displayTrim, displayMusic, clickMusic, getDuration }) => {
   const webcamRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const [recording, setRecording] = useState(false);
@@ -45,6 +45,7 @@ const WebcamRecorder = ({ onRecorded, clickTrim, displayTrim, displayMusic, clic
             clearInterval(interval);
             return 60;
           }
+          getDuration(prev + 1);
           return prev + 1;
         });
       }, 1000);
@@ -61,7 +62,7 @@ const WebcamRecorder = ({ onRecorded, clickTrim, displayTrim, displayMusic, clic
   return (
     <div className='relative'>
       {videoURL ? (
-        <video src={videoURL} controls width="400" style={{ marginTop: 20 }} className='h-screen object-cover' />
+        <video src={videoURL} controls className='h-screen object-cover' />
       ) : <Webcam audio={true} muted={true} ref={webcamRef} className='h-screen object-cover' />}
       {recording ? 
       <div className='absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white p-2 flex justify-between items-center'>
@@ -81,9 +82,9 @@ const WebcamRecorder = ({ onRecorded, clickTrim, displayTrim, displayMusic, clic
       <div className='absolute top-2 right-2 p-2'>
         {videoURL ?
           <>
-            {!displayTrim && !displayMusic ? <button className="bg-primary rounded-full p-2 mr-2" onClick={() => clickTrim(true)}>✂️</button>
+            {!displayTrim && !displayMusic ? <button className="bg-primary rounded-full p-2 mr-2 web" onClick={() => clickTrim(true)}>✂️</button>
               : null}
-            {!displayMusic && !displayTrim ? <button className="bg-primary rounded-full p-2" onClick={() => clickMusic(true)}>🎬</button>
+            {!displayMusic && !displayTrim ? <button className="bg-primary rounded-full p-2 web" onClick={() => clickMusic(true)}>🎬</button>
               : null}
           </> : null
         }

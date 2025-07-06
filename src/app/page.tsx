@@ -9,25 +9,29 @@ export default function Home() {
   const [videoTrimmed, trimVideo] = useState(false);
   const [videoMerged, mergeVideo] = useState(false);
   const [displayMusic, clickMusic] = useState(false);
+  const [finalDuration, setDuration] = useState(0);
 
   return (
-    <div>
+    <div className='relative'>
       {!videoTrimmed && !videoMerged ?
-      <WebcamRecorder 
-      onRecorded={setRecordedBlob} 
-      clickTrim={clickTrim} 
-      displayTrim={displayTrim} 
-      displayMusic={displayMusic}
-      clickMusic={clickMusic}
-      /> : null}
-      {recordedBlob && (displayTrim || displayMusic) && <VideoTrimmer 
-        videoBlob={recordedBlob} 
-        trimVideoState={trimVideo} 
+        <WebcamRecorder
+          onRecorded={setRecordedBlob}
+          clickTrim={clickTrim}
+          displayTrim={displayTrim}
+          displayMusic={displayMusic}
+          clickMusic={clickMusic}
+          getDuration={setDuration}
+        /> : null}
+      {recordedBlob && <VideoTrimmer
+        finalDuration={finalDuration}
+        videoBlob={recordedBlob}
+        trimVideoState={trimVideo}
         mergeVideoState={mergeVideo}
         displayMusic={displayMusic}
-        clickMusic={clickMusic} 
+        clickMusic={clickMusic}
         displayTrim={displayTrim}
         clickTrim={clickTrim}
+        setDuration={setDuration}
       />}
     </div>
   );
