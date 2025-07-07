@@ -1,22 +1,13 @@
 import React, { useState, useRef } from 'react';
 import { trimVideo, mergeMedia } from './ffmpegUtils';
-import { set } from 'date-fns';
 import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
 
-// const { Range } = Slider;
 
 const VideoTrimmer = ({ videoBlob, trimVideoState, displayMusic, clickMusic, clickTrim, displayTrim, mergeVideoState, finalDuration, setDuration }) => {
   const [start, setStart] = useState(0);
   const videoRef = useRef(null);
-  // const [videoDuration, setVideoDuration] = useState(0);
-  // const [duration, setDuration] = useState(5);
-  // const [outputURL, setOutputURL] = useState(null);
-  // const [thumbnail, setThumbnail] = useState("");
   const [audioFile, setAudioFile] = useState(null);
-  // const [trimmedVideo, setTrimmedVideo] = useState(null);
-  // const [mergedVideo, setMergedVideo] = useState(null);
-  // const [outputMergedURL, setOutputMergedURL] = useState(null);
   const [range, setRange] = useState([0, finalDuration || 5]); // initial [start, end]
 
   const handleChange = (val) => {
@@ -42,17 +33,10 @@ const VideoTrimmer = ({ videoBlob, trimVideoState, displayMusic, clickMusic, cli
     // captureThumbnail(resultURL.blob);
 
     setPreview(resultURL);
-    // setTrimmedVideo(resultURL.blob);
     trimVideoState(true);
-    // setOutputURL(resultURL.url);
-    // setOutputMergedURL("");
-    // clickMusic(false);
   };
 
   const finalizeTrim = () => {
-    // setOutputURL(preview.url);
-    // setTrimmedVideo(preview.blob);
-
     setFinalVideo(preview);
     setPreview(null);
     if (displayTrim) {
@@ -61,8 +45,6 @@ const VideoTrimmer = ({ videoBlob, trimVideoState, displayMusic, clickMusic, cli
     }
     clickTrim(false);
     clickMusic(false);
-    // setOutputMergedURL("");
-    // clickMusic(false);
   };
 
   // const captureThumbnail = (blob) => {
@@ -92,10 +74,6 @@ const VideoTrimmer = ({ videoBlob, trimVideoState, displayMusic, clickMusic, cli
       url: URL.createObjectURL(finalVideo ? finalVideo.blob : videoBlob),
       blob: finalVideo ? finalVideo.blob : videoBlob
     });
-    // setOutputURL("");
-    // clickTrim(false);
-    // setMergedVideo(resultURL.blob);
-    // setOutputMergedURL(resultURL.url);
     mergeVideoState(true);
     setPreview(resultURL);
     setAudioFile(null);
@@ -126,10 +104,6 @@ const VideoTrimmer = ({ videoBlob, trimVideoState, displayMusic, clickMusic, cli
         {finalVideo &&
           <><h2 className='text-center absolute top-0 left-0 w-full'>Final</h2>
             <video src={finalVideo.url} controls className='h-screen object-cover' ref={videoRef}
-              // onLoadedMetadata={(e) => {
-              //   // setStart(0);
-              //   setRange([0, e.target.duration]);
-              // }}
             />
             {!displayTrim && !displayMusic ?
               <>
@@ -146,24 +120,6 @@ const VideoTrimmer = ({ videoBlob, trimVideoState, displayMusic, clickMusic, cli
 
 
       {displayTrim ? <>
-        {/* <label>Start time (s):</label>
-        <input type="number" value={start} className='border p-1 bg-white' onChange={(e) => setStart(Number(e.target.value))} />
-        <label>Duration (s):</label>
-        <input type="number" value={duration} className='border p-1 bg-white' onChange={(e) => setDuration(Number(e.target.value))} /> */}
-        {/* <Slider
-          range
-          min={start}
-          max={duration}
-          value={[start, duration]}
-          onChange={(val) => {
-            console.log("Slider Value:", val);
-            setStart(val[0]);
-            setDuration(val[1]);
-          }}
-          allowCross={false}
-          trackStyle={[{ backgroundColor: '#0d6efd' }]}
-          handleStyle={[{ borderColor: '#0d6efd' }, { borderColor: '#0d6efd' }]}
-        /> */}
         <div className='absolute w-full' style={{ bottom: '15px', padding: '0 20px' }}>
           <Slider
             range
@@ -183,9 +139,8 @@ const VideoTrimmer = ({ videoBlob, trimVideoState, displayMusic, clickMusic, cli
         <div className='absolute w-full z-50' style={{ bottom: '40px', padding: '10px 20px', backgroundColor: '#000' }}>
           <span className='text-sm text-gray-500'>Trim from {range[0]}s to {range[1]}s</span>
         </div>
-        {/* <br /> */}
         <>
-          {/* <button onClick={merge} className="bg-primary p-2 text-white rounded-lg" style={{ marginTop: 10 }}>✂️ Merge Media</button> */}
+          
           <button onClick={handleTrim} className="bg-white p-2 text-white rounded-full absolute right-4 top-2" style={{ marginTop: 10 }}>
             ✔️
           </button>
@@ -195,7 +150,6 @@ const VideoTrimmer = ({ videoBlob, trimVideoState, displayMusic, clickMusic, cli
           }} className="ml-2 bg-white p-2 text-white rounded-full absolute left-4 top-2" style={{ marginTop: 10 }}>
             ❌
           </button>
-          {/* <button onClick={() => clickMusic(false)} className=" p-2 text-white rounded-lg ml-2" style={{ marginTop: 10, backgroundColor: "red" }}> Cancel</button> */}
         </>
 
 
@@ -228,22 +182,18 @@ const VideoTrimmer = ({ videoBlob, trimVideoState, displayMusic, clickMusic, cli
               </button>
             </> :
             <>
-              {/* <button onClick={merge} className="bg-primary p-2 text-white rounded-lg" style={{ marginTop: 10 }}>✂️ Merge Media</button> */}
               <button onClick={merge} className="bg-white p-2 text-white rounded-full absolute right-4 top-2" style={{ marginTop: 10 }}>
                 ✔️
               </button>
               <button onClick={() => {
                 setAudioFile(null);
                 inputRef.current.value = "";
-                // setPreview(null);
               }} className="ml-2 bg-white p-2 text-white rounded-full absolute left-4 top-2" style={{ marginTop: 10 }}>
                 ❌
               </button>
-              {/* <button onClick={() => clickMusic(false)} className=" p-2 text-white rounded-lg ml-2" style={{ marginTop: 10, backgroundColor: "red" }}> Cancel</button> */}
             </>
           }
         </> : null}
-      {/* </div> */}
     </div>
   );
 };
