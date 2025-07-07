@@ -1,9 +1,17 @@
+"use client";
+import dynamic from 'next/dynamic';
 import React, { useEffect, useRef, useState } from 'react';
 import Webcam from 'react-webcam';
+// import RecordRTC from 'recordrtc';
 
 const reelTime = 15; // seconds
+let RecordRTC = null; // Initialize RecordRTC as null
 
 const WebcamRecorder = ({ onRecorded, clickTrim, displayTrim, displayMusic, clickMusic, getDuration }) => {
+  // new
+  const streamRef = useRef(null);
+  const recorderRef = useRef(null);
+  // end new
   const webcamRef = useRef(null);
   const [facingMode, setFacingMode] = useState("user");
   const mediaRecorderRef = useRef(null);
@@ -13,9 +21,20 @@ const WebcamRecorder = ({ onRecorded, clickTrim, displayTrim, displayMusic, clic
   let interval = null;
   const [isMobile, setIsMobile] = useState(false);
 
+  // new
+  const [isSupported, setIsSupported] = useState(true);
+
   useEffect(() => {
     const userAgent = navigator.userAgent || navigator.vendor || window.opera;
     setIsMobile(/android|iphone|ipad|mobile/i.test(userAgent));
+    if (typeof navigator.mediaDevices === 'undefined' || typeof RecordRTC === 'undefined') {
+      setIsSupported(false);
+    }
+    if (typeof window !== 'undefined') {
+      import('recordrtc').then((mod) => {
+        RecordRTC = mod.default || mod;
+      });
+    }
   }, []);
 
   const videoConstraints = {
@@ -26,39 +45,78 @@ const WebcamRecorder = ({ onRecorded, clickTrim, displayTrim, displayMusic, clic
     setFacingMode((prev) => (prev === "user" ? "environment" : "user"));
   };
 
-  const startRecording = () => {
-    setRecording(true);
-    const stream = webcamRef.current.stream;
-    const recorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+  const startRecording = async () => {
+    try {
+      const stream = webcamRef.current.stream;
+      streamRef.current = stream;
 
-    const chunks = [];
-    recorder.ondataavailable = (e) => chunks.push(e.data);
-    recorder.onstop = () => {
-      const blob = new Blob(chunks, { type: 'video/webm' });
+      const recorder = new RecordRTC(stream, {
+        type: 'video',
+        mimeType: 'video/mp4',
+        disableLogs: true,
+      });
+
+      recorder.startRecording();
+      recorderRef.current = recorder;
+      setRecording(true);
+    } catch (err) {
+      console.error('Error starting recording:', err);
+      alert('Recording failed. Make sure you have granted camera and microphone access.');
+    }
+  };
+
+  const stopRecording = async () => {
+    const recorder = recorderRef.current;
+
+    if (!recorder) return;
+
+    await recorder.stopRecording(() => {
+      const blob = recorder.getBlob();
       const url = URL.createObjectURL(blob);
       setVideoURL(url);
       onRecorded(blob);
-    };
+    });
 
-    recorder.start();
-
-    setTimer(reelTime);
-    // Stop recording after 60 seconds
-
-    mediaRecorderRef.current = recorder;
-  };
-
-  const stopRecording = () => {
-    mediaRecorderRef.current.stop();
-    clearInterval(interval);
+    // Stop webcam stream tracks to release camera
+    streamRef.current?.getTracks().forEach((track) => track.stop());
     setRecording(false);
+    clearInterval(interval);
   };
+
+  // const startRecording = () => {
+  //   setRecording(true);
+  //   const stream = webcamRef.current.stream;
+  //   const recorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+
+  //   const chunks = [];
+  //   recorder.ondataavailable = (e) => chunks.push(e.data);
+  //   recorder.onstop = () => {
+  //     const blob = new Blob(chunks, { type: 'video/webm' });
+  //     const url = URL.createObjectURL(blob);
+  //     setVideoURL(url);
+  //     onRecorded(blob);
+  //   };
+
+  //   recorder.start();
+
+  //   setTimer(reelTime);
+  //   // Stop recording after 60 seconds
+
+  //   mediaRecorderRef.current = recorder;
+  // };
+
+  // const stopRecording = () => {
+  //   mediaRecorderRef.current.stop();
+  //   clearInterval(interval);
+  //   setRecording(false);
+  // };
 
   useEffect(() => {
     if (recording) {
       interval = setInterval(() => {
         setTimer((prev) => {
           if (prev >= 0 && prev <= reelTime) {
+            getDuration(reelTime - prev + 1);
             return prev - 1;
           } else {
             clearInterval(interval);
@@ -75,6 +133,10 @@ const WebcamRecorder = ({ onRecorded, clickTrim, displayTrim, displayMusic, clic
     }
     return () => clearInterval(interval);
   }, [recording]);
+
+  if (!isSupported) {
+    return <p>❌ Your browser does not support video recording.</p>;
+  }
 
   return (
     <div className='relative'>
@@ -157,4 +219,5 @@ const WebcamRecorder = ({ onRecorded, clickTrim, displayTrim, displayMusic, clic
   );
 };
 
-export default WebcamRecorder;
+export default dynamic(() => Promise.resolve(WebcamRecorder), { ssr: false });
+
