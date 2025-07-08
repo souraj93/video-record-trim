@@ -149,11 +149,12 @@ const WebcamRecorder = ({ onRecorded, clickTrim, displayTrim, displayMusic, clic
 
     setVideoURL(videoURL);
     onRecorded(file);
+    video.load();
 
     video.onloadedmetadata = () => {
-      video.currentTime = 0.1;
+      video.currentTime = 0.5;
       getDuration(video.duration);
-      URL.revokeObjectURL(videoURL); // clean up
+      // URL.revokeObjectURL(videoURL); // clean up
     };
 
     video.onseeked = () => {
@@ -162,12 +163,17 @@ const WebcamRecorder = ({ onRecorded, clickTrim, displayTrim, displayMusic, clic
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       const ctx = canvas.getContext("2d");
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      const dataUrl = canvas.toDataURL("image/jpeg");
-      setThumbnail(dataUrl);
-      setShowVideo(false);
+      try {
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const fallback = canvas.toDataURL("image/jpeg");
+            setThumbnail(fallback);
+            setShowVideo(false);
+          } catch (err) {
+            console.error("Fallback drawing failed", err);
+          }
       URL.revokeObjectURL(video.src);
     };
+    
 
   };
 
@@ -190,7 +196,7 @@ const WebcamRecorder = ({ onRecorded, clickTrim, displayTrim, displayMusic, clic
           <img
             src={thumbnail}
             alt="Thumbnail"
-            style={{ width: "100%", borderRadius: 8 }}
+            style={{ width: "100%", height: "100vh", borderRadius: 8, zIndex: 50, objectFit: "cover" }}
           />
           <div
             style={{
@@ -198,7 +204,6 @@ const WebcamRecorder = ({ onRecorded, clickTrim, displayTrim, displayMusic, clic
               top: "50%",
               left: "50%",
               transform: "translate(-50%, -50%)",
-              background: "#000a",
               padding: "10px 14px",
               borderRadius: "50%",
               color: "#fff",
