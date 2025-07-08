@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { trimVideo, mergeMedia } from './ffmpegUtils';
 import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
@@ -13,6 +13,12 @@ const VideoTrimmer = ({ videoBlob, trimVideoState, displayMusic, clickMusic, cli
   const handleChange = (val) => {
     setRange(val);
   };
+
+  console.log(range,finalDuration)
+
+  useEffect(() => {
+    setRange([start, finalDuration || 5]);
+  }, [start, finalDuration]);
 
   const [preview, setPreview] = useState(null);
 
