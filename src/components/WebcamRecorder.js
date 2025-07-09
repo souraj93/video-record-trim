@@ -7,7 +7,7 @@ import React, { useEffect, useRef, useState } from 'react';
 // const reelTime = 15; // seconds
 // let RecordRTC = null; // Initialize RecordRTC as null
 
-const WebcamRecorder = ({ onRecorded, clickTrim, displayTrim, displayMusic, clickMusic, getDuration }) => {
+const WebcamRecorder = ({ onRecorded, clickTrim, displayTrim, displayMusic, clickMusic, getDuration, clickCrop, displayCrop,setCapturedImage }) => {
   // new
   // const streamRef = useRef(null);
   // const recorderRef = useRef(null);
@@ -25,6 +25,7 @@ const WebcamRecorder = ({ onRecorded, clickTrim, displayTrim, displayMusic, clic
   const [thumbnail, setThumbnail] = useState(null);
   const [showVideo, setShowVideo] = useState(false);
   const originalVideoRef = useRef(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
 
   // new
   // const [isSupported, setIsSupported] = useState(true);
@@ -152,29 +153,41 @@ const WebcamRecorder = ({ onRecorded, clickTrim, displayTrim, displayMusic, clic
     video.load();
 
     video.onloadedmetadata = () => {
-      video.currentTime = 0.5;
+      // video.currentTime = 0.5;
       getDuration(video.duration);
       // URL.revokeObjectURL(videoURL); // clean up
     };
 
-    video.onseeked = () => {
-      // draw frame to canvas
-      const canvas = canvasRef.current;
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      const ctx = canvas.getContext("2d");
-      try {
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            const fallback = canvas.toDataURL("image/jpeg");
-            setThumbnail(fallback);
-            setShowVideo(false);
-          } catch (err) {
-            console.error("Fallback drawing failed", err);
-          }
-      URL.revokeObjectURL(video.src);
-    };
+    // video.onseeked = () => {
+    //   // draw frame to canvas
+    //   const canvas = canvasRef.current;
+    //   canvas.width = video.videoWidth;
+    //   canvas.height = video.videoHeight;
+    //   const ctx = canvas.getContext("2d");
+    //   try {
+    //         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    //         const fallback = canvas.toDataURL("image/jpeg");
+    //         setThumbnail(fallback);
+    //         setShowVideo(false);
+    //       } catch (err) {
+    //         console.error("Fallback drawing failed", err);
+    //       }
+    //   URL.revokeObjectURL(video.src);
+    // };
     
 
+  };
+
+  const handleImgFileChange = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPreviewUrl(reader.result);
+      setCapturedImage(reader.result); // Set the captured image for further processing
+    };
+    reader.readAsDataURL(file); // Read file as base64 URL
   };
 
   // if (!isSupported) {
@@ -185,8 +198,8 @@ const WebcamRecorder = ({ onRecorded, clickTrim, displayTrim, displayMusic, clic
     <div className='relative h-screen'>
       <video ref={videoRef} style={{ display: "none" }} />
 
-      <canvas ref={canvasRef} style={{ display: "none" }} />
-      {thumbnail && !showVideo && (
+      {/* <canvas ref={canvasRef} style={{ display: "none" }} /> */}
+      {/* {thumbnail && !showVideo && (
         <div onClick={() => {setShowVideo(true)
 
           setTimeout(() => {
@@ -213,25 +226,50 @@ const WebcamRecorder = ({ onRecorded, clickTrim, displayTrim, displayMusic, clic
             ▶
           </div>
         </div>
-      )}
+      )} */}
       {videoURL ? (
 
         <video ref={originalVideoRef} src={videoURL} controls className='h-screen object-cover' />
       ) :
-        !showVideo ? <>
+        !showVideo && !previewUrl ? <>
           <button
             className="bg-primary rounded-full p-2 absolute top-2 left-2"
             onClick={() => document.getElementById('video-upload').click()}
           >
-            📹 Record Video
+            📹 Upload Video
           </button>
           <input
             id="video-upload"
             type="file"
             accept="video/*"
-            capture="user"
             style={{ display: 'none' }}
             onChange={handleFileChange}
+          />
+        </> : null
+        // <Webcam audio={true} muted={true} ref={webcamRef} videoConstraints={videoConstraints} className='h-screen object-cover' />
+      }
+      {!displayCrop ? previewUrl ? (
+        <div style={{ marginTop: 20 }}>
+          <p>📸 Preview:</p>
+          <img
+            src={previewUrl}
+            alt="Preview"
+            style={{ maxWidth: '100%', borderRadius: 8 }}
+          />
+        </div>
+      ) : !videoURL && <>
+          <button
+            className="bg-primary rounded-full p-2 absolute top-2 right-2"
+            onClick={() => document.getElementById('img-upload').click()}
+          >
+            📸 Upload Image
+          </button>
+          <input
+            id="img-upload"
+            type="file"
+            accept="image/*"
+            style={{ display: 'none' }}
+            onChange={handleImgFileChange}
           />
         </> : null
         // <Webcam audio={true} muted={true} ref={webcamRef} videoConstraints={videoConstraints} className='h-screen object-cover' />
@@ -304,6 +342,17 @@ const WebcamRecorder = ({ onRecorded, clickTrim, displayTrim, displayMusic, clic
             {!displayTrim && !displayMusic ? <button className="bg-primary rounded-full p-2 mr-2 web" onClick={() => clickTrim(true)}>✂️</button>
               : null}
             {!displayMusic && !displayTrim ? <button className="bg-primary rounded-full p-2 web" onClick={() => clickMusic(true)}>🎬</button>
+              : null}
+          </> : null
+        }
+        {previewUrl ?
+          <>
+            {!displayCrop ? <button className="bg-primary rounded-full p-2 mr-2 web" onClick={() => clickCrop(true)}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M6 2v14a2 2 0 0 0 2 2h14" />
+                <path d="M18 22V8a2 2 0 0 0-2-2H2" />
+              </svg>
+            </button>
               : null}
           </> : null
         }
